@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>coucours</title>
+
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Conversion HEIC → JPEG -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6fb;
+            color: #222;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 28px 20px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+
+        header h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            opacity: 0.9;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        button {
+            border: none;
+            padding: 11px 17px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        /* =========================
+           ÉCRAN CODE DE CLASSE
+        ========================= */
+
+        #accessScreen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 9999;
+        }
+
+        .access-box {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        }
+
+        .access-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+
+        .access-box h2 {
+            margin-bottom: 10px;
+        }
+
+        .access-box p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .access-box input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 17px;
+            text-align: center;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        .access-box input:focus {
+            border-color: #4f46e5;
+        }
+
+        .enter-button {
+            width: 100%;
+            background: #4f46e5;
+            color: white;
+        }
+
+        .access-error {
+            color: #dc2626;
+            display: none;
+            margin-bottom: 12px;
+        }
+
+        /* =========================
+           BARRE DU HAUT
+        ========================= */
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .admin-button {
+            background: #111827;
+            color: white;
+        }
+
+        .logout-button {
+            background: #dc2626;
+            color: white;
+        }
+
+        /* =========================
+           MATIÈRES
+        ========================= */
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 20px;
+        }
+
+        .category {
+            background: white;
+            border-radius: 18px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.13);
+        }
+
+        .category .icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .category h2 {
+            font-size: 21px;
+        }
+
+        /* =========================
+           RECHERCHE
+        ========================= */
+
+        .search-box {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.06);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-box input:focus {
+            border-color: #4f46e5;
+        }
+
+        /* =========================
+           ADMIN
+        ========================= */
+
+        .admin-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .admin-panel h3 {
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .upload-button {
+            background: #16a34a;
+            color: white;
+            width: 100%;
+        }
+
+        /* =========================
+           BOUTON RETOUR
+        ========================= */
+
+        .back-button {
+            background: #6b7280;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .course-header {
+            margin-bottom: 20px;
+        }
+
+        /* =========================
+           PHOTOS
+        ========================= */
+
+        .photos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .photo-card {
+            background: white;
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 300px;
+            object-fit: contain;
+            background: #f1f1f1;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .photo-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 12px 5px 5px;
+        }
+
+        .photo-date {
+            color: #777;
+            font-size: 14px;
+            margin: 0 5px 5px;
+        }
+
+        .delete-button {
+            background: #dc2626;
+            color: white;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .empty {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+
+        /* =========================
+           MODAL ADMIN
+        ========================= */
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .login-button {
+            background: #4f46e5;
+            color: white;
+            width: 100%;
+        }
+
+        .close-button {
+            background: #6b7280;
+            color: white;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .error {
+            color: #dc2626;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+
+        @media (max-width: 600px) {
+
+            header h1 {
+                font-size: 28px;
+            }
+
+            .photo-card img {
+                height: 250px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================
+     CODE DE CLASSE
+========================= -->
+
+<div id="accessScreen">
+
+    <div class="access-box">
+
+        <img
+            src="logo.jpg"
+            class="access-logo"
+            alt="Logo coucours"
+        >
+
+        <h2>Bienvenue sur coucours 👋</h2>
+
+        <p>
+            Entre le code de ta classe pour accéder aux cours.
+        </p>
+
+        <div
+            id="accessError"
+            class="access-error">
+
+            ❌ Code incorrect.
+
+        </div>
+
+        <input
+            type="password"
+            id="classPassword"
+            placeholder="Code de la classe"
+            onkeydown="if(event.key === 'Enter') checkClassCode()"
+        >
+
+        <button
+            class="enter-button"
+            onclick="checkClassCode()">
+
+            🔓 Entrer sur coucours
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     SITE
+========================= -->
+
+<div id="site" style="display:none;">
+
+<header>
+
+    <h1>📚 coucours</h1>
+
+    <p>
+        Tous les cours de la classe au même endroit
+    </p>
+
+</header>
+
+
+<div class="container">
+
+
+    <div class="top-bar">
+
+        <h2 id="pageTitle">
+            Mes matières
+        </h2>
+
+        <div>
+
+            <button
+                id="adminButton"
+                class="admin-button"
+                onclick="openAdminLogin()">
+
+                🔐 Administration
+
+            </button>
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+                onclick="logoutAdmin()"
+                style="display:none;">
+
+                Déconnexion admin
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         ACCUEIL
+    ========================= -->
+
+    <section id="homePage">
+
+        <div class="categories">
+
+            <div
+                class="category"
+                onclick="openSubject('francais')">
+
+                <div class="icon">📖</div>
+
+                <h2>Français</h2>
+
+            </div>
+
+
+            <div
+                class="category"
+                onclick="openSubject('maths')">
+
+                <div class="icon">➗</div>
+
+                <h2>Maths</h2>
+
+            </div>
+
+
+            <div
+                class="category"
+                onclick="openSubject('histoire')">
+
+                <div class="icon">🏛️</div>
+
+                <h2>Histoire</h2>
+
+            </div>
+
+
+            <div
+                class="category"
+                onclick="openSubject('svt')">
+
+                <div class="icon">🧬</div>
+
+                <h2>SVT</h2>
+
+            </div>
+
+
+            <div
+                class="category"
+                onclick="openSubject('physique')">
+
+                <div class="icon">⚗️</div>
+
+                <h2>Physique-Chimie</h2>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         MATIÈRE
+    ========================= -->
+
+    <section
+        id="subjectPage"
+        style="display:none;">
+
+        <button
+            class="back-button"
+            onclick="goHome()">
+
+            ← Retour aux matières
+
+        </button>
+
+
+        <div class="course-header">
+
+            <h2 id="subjectTitle"></h2>
+
+        </div>
+
+
+        <!-- RECHERCHE -->
+
+        <div class="search-box">
+
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="🔎 Rechercher un cours..."
+                oninput="displayCourses()"
+            >
+
+        </div>
+
+
+        <!-- ADMIN -->
+
+        <div
+            id="adminPanel"
+            class="admin-panel"
+            style="display:none;">
+
+            <h3>
+                📸 Ajouter un cours
+            </h3>
+
+
+            <div class="form-group">
+
+                <label>
+                    Nom du cours
+                </label>
+
+                <input
+                    type="text"
+                    id="courseName"
+                    placeholder="Ex : Théorème de Pythagore"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Date du cours
+                </label>
+
+                <input
+                    type="date"
+                    id="courseDate"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Photo(s)
+                </label>
+
+                <input
+                    type="file"
+                    id="fileInput"
+                    accept="image/*,.heic,.heif"
+                    multiple
+                >
+
+            </div>
+
+
+            <button
+                class="upload-button"
+                onclick="addCourses()">
+
+                📤 Ajouter le cours
+
+            </button>
+
+        </div>
+
+
+        <!-- COURS -->
+
+        <div
+            id="photosContainer"
+            class="photos">
+        </div>
+
+    </section>
+
+
+</div>
+
+
+<footer>
+
+    © 2026 — coucours
+
+</footer>
+
+</div>
+
+
+<!-- =========================
+     CONNEXION ADMIN
+========================= -->
+
+<div
+    id="adminModal"
+    class="modal">
+
+    <div class="modal-content">
+
+        <h2>
+            🔐 Administration
+        </h2>
+
+        <p style="margin-bottom:15px;">
+            Connecte-toi avec ton compte administrateur.
+        </p>
+
+        <p
+            id="adminError"
+            class="error">
+        </p>
+
+
+        <input
+            type="email"
+            id="adminEmail"
+            placeholder="Adresse e-mail"
+        >
+
+
+        <input
+            type="password"
+            id="adminPassword"
+            placeholder="Mot de passe"
+            onkeydown="if(event.key === 'Enter') loginAdmin()"
+        >
+
+
+        <button
+            class="login-button"
+            onclick="loginAdmin()">
+
+            Se connecter
+
+        </button>
+
+
+        <button
+            class="close-button"
+            onclick="closeAdminLogin()">
+
+            Annuler
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ==================================================
+   SUPABASE
+================================================== */
+
+const SUPABASE_URL =
+    "https://ytwhvfwggdanfumqpyws.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_bBPambv3lF0soN7Cw9OPog_ajLXySVg";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+/* ==================================================
+   CODE D'ACCÈS DE LA CLASSE
+================================================== */
+
+const CLASS_PASSWORD = "11moliere";
+
+
+function checkClassCode() {
+
+    const input =
+        document
+        .getElementById("classPassword")
+        .value
+        .trim();
+
+    const error =
+        document
+        .getElementById("accessError");
+
+
+    if (input === CLASS_PASSWORD) {
+
+        sessionStorage.setItem(
+            "classAccess",
+            "true"
+        );
+
+        document
+            .getElementById("accessScreen")
+            .style.display = "none";
+
+        document
+            .getElementById("site")
+            .style.display = "block";
+
+        error.style.display = "none";
+
+    } else {
+
+        error.textContent =
+            "❌ Code incorrect.";
+
+        error.style.display = "block";
+
+        document
+            .getElementById("classPassword")
+            .value = "";
+
+        document
+            .getElementById("classPassword")
+            .focus();
+
+    }
+
+}
+
+
+/* ==================================================
+   VÉRIFICATION DE L'ACCÈS AU CHARGEMENT
+================================================== */
+
+window.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        if (
+            sessionStorage.getItem("classAccess")
+            === "true"
+        ) {
+
+            document
+                .getElementById("accessScreen")
+                .style.display = "none";
+
+            document
+                .getElementById("site")
+                .style.display = "block";
+
+        }
+
+    }
+);
+
+
+/* ==================================================
+   MATIÈRES
+================================================== */
+
+const subjects = {
+
+    francais: {
+        name: "📖 Français"
+    },
+
+    maths: {
+        name: "➗ Maths"
+    },
+
+    histoire: {
+        name: "🏛️ Histoire"
+    },
+
+    svt: {
+        name: "🧬 SVT"
+    },
+
+    physique: {
+        name: "⚗️ Physique-Chimie"
+    }
+
+};
+
+
+let currentSubject = null;
+
+let isAdmin = false;
+
+
+/* ==================================================
+   ADMIN
+================================================== */
+
+function openAdminLogin() {
+
+    document
+        .getElementById("adminModal")
+        .style.display = "flex";
+
+    document
+        .getElementById("adminError")
+        .style.display = "none";
+
+}
+
+
+function closeAdminLogin() {
+
+    document
+        .getElementById("adminModal")
+        .style.display = "none";
+
+}
+
+
+async function loginAdmin() {
+
+    const email =
+        document
+        .getElementById("adminEmail")
+        .value
+        .trim();
+
+    const password =
+        document
+        .getElementById("adminPassword")
+        .value;
+
+
+    if (!email || !password) {
+
+        showAdminError(
+            "⚠️ Remplis ton e-mail et ton mot de passe."
+        );
+
+        return;
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient.auth
+        .signInWithPassword({
+            email: email,
+            password: password
+        });
+
+
+    if (error) {
+
+        showAdminError(
+            "❌ E-mail ou mot de passe incorrect."
+        );
+
+        console.error(error);
+
+        return;
+
+    }
+
+
+    isAdmin = true;
+
+
+    closeAdminLogin();
+
+
+    document
+        .getElementById("adminButton")
+        .style.display = "none";
+
+
+    document
+        .getElementById("logoutButton")
+        .style.display = "inline-block";
+
+
+    document
+        .getElementById("adminPanel")
+        .style.display = "block";
+
+
+    displayCourses();
+
+}
+
+
+function showAdminError(message) {
+
+    const error =
+        document.getElementById("adminError");
+
+    error.textContent = message;
+
+    error.style.display = "block";
+
+}
+
+
+async function logoutAdmin() {
+
+    await supabaseClient.auth.signOut();
+
+    isAdmin = false;
+
+
+    document
+        .getElementById("adminButton")
+        .style.display = "inline-block";
+
+
+    document
+        .getElementById("logoutButton")
+        .style.display = "none";
+
+
+    document
+        .getElementById("adminPanel")
+        .style.display = "none";
+
+
+    displayCourses();
+
+}
+
+
+/* ==================================================
+   MATIÈRES
+================================================== */
+
+function openSubject(subject) {
+
+    currentSubject = subject;
+
+
+    document
+        .getElementById("homePage")
+        .style.display = "none";
+
+
+    document
+        .getElementById("subjectPage")
+        .style.display = "block";
+
+
+    document
+        .getElementById("subjectTitle")
+        .textContent =
+        subjects[subject].name;
+
+
+    document
+        .getElementById("pageTitle")
+        .textContent =
+        subjects[subject].name;
+
+
+    document
+        .getElementById("searchInput")
+        .value = "";
+
+
+    displayCourses();
+
+}
+
+
+/* ==================================================
+   RETOUR
+================================================== */
+
+function goHome() {
+
+    currentSubject = null;
+
+
+    document
+        .getElementById("subjectPage")
+        .style.display = "none";
+
+
+    document
+        .getElementById("homePage")
+        .style.display = "block";
+
+
+    document
+        .getElementById("pageTitle")
+        .textContent = "Mes matières";
+
+}
+
+
+/* ==================================================
+   RÉCUPÉRER LES COURS
+================================================== */
+
+async function getCourses() {
+
+    if (!currentSubject) {
+        return [];
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+        .from("courses")
+        .select("*")
+        .eq("subject", currentSubject)
+        .order("created_at", {
+            ascending: false
+        });
+
+
+    if (error) {
+
+        console.error(
+            "Erreur récupération cours :",
+            error
+        );
+
+        return [];
+
+    }
+
+
+    return data || [];
+
+}
+
+
+/* ==================================================
+   AFFICHER LES COURS
+================================================== */
+
+async function displayCourses() {
+
+    const container =
+        document.getElementById(
+            "photosContainer"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    container.innerHTML = `
+        <div class="loading">
+            ⏳ Chargement des cours...
+        </div>
+    `;
+
+
+    const courses =
+        await getCourses();
+
+
+    const searchInput =
+        document.getElementById(
+            "searchInput"
+        );
+
+
+    const search =
+        searchInput
+        ? searchInput.value
+            .toLowerCase()
+            .trim()
+        : "";
+
+
+    const filteredCourses =
+        courses.filter(course => {
+
+            const title =
+                course.title
+                ? course.title
+                    .toLowerCase()
+                : "";
+
+            const date =
+                course.course_date
+                ? course.course_date
+                    .toLowerCase()
+                : "";
+
+            return (
+                title.includes(search) ||
+                date.includes(search)
+            );
+
+        });
+
+
+    container.innerHTML = "";
+
+
+    if (filteredCourses.length === 0) {
+
+        container.innerHTML = `
+
+            <div class="empty">
+
+                <h3>
+                    ${
+                        courses.length === 0
+                        ? "📭 Aucun cours pour le moment"
+                        : "🔎 Aucun résultat"
+                    }
+                </h3>
+
+                <p style="margin-top:10px;">
+
+                    ${
+                        courses.length === 0
+                        ? "Les cours apparaîtront ici."
+                        : "Essaie avec un autre mot-clé."
+                    }
+
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    filteredCourses.forEach(course => {
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "photo-card";
+
+
+        const image =
+            document.createElement("img");
+
+        image.src =
+            course.image_url;
+
+        image.alt =
+            course.title || "Cours";
+
+        image.onclick = function () {
+            openImage(course.image_url);
+        };
+
+
+        card.appendChild(image);
+
+
+        const title =
+            document.createElement("div");
+
+        title.className =
+            "photo-title";
+
+        title.textContent =
+            course.title || "Cours";
+
+        card.appendChild(title);
+
+
+        if (course.course_date) {
+
+            const date =
+                document.createElement("div");
+
+            date.className =
+                "photo-date";
+
+            date.textContent =
+                "📅 " +
+                formatDate(
+                    course.course_date
+                );
+
+            card.appendChild(date);
+
+        }
+
+
+        if (isAdmin) {
+
+            const deleteButton =
+                document.createElement("button");
+
+            deleteButton.className =
+                "delete-button";
+
+            deleteButton.textContent =
+                "🗑️ Supprimer";
+
+            deleteButton.onclick =
+                function () {
+
+                    deleteCourse(
+                        course.id,
+                        course.image_url
+                    );
+
+                };
+
+            card.appendChild(
+                deleteButton
+            );
+
+        }
+
+
+        container.appendChild(card);
+
+    });
+
+}
+
+
+/* ==================================================
+   AJOUTER UN COURS
+================================================== */
+
+async function addCourses() {
+
+    if (!isAdmin) {
+
+        alert(
+            "❌ Accès refusé."
+        );
+
+        return;
+
+    }
+
+
+    if (!currentSubject) {
+
+        alert(
+            "❌ Sélectionne d'abord une matière."
+        );
+
+        return;
+
+    }
+
+
+    const name =
+        document
+        .getElementById("courseName")
+        .value
+        .trim();
+
+
+    const date =
+        document
+        .getElementById("courseDate")
+        .value;
+
+
+    const files =
+        Array.from(
+            document
+            .getElementById("fileInput")
+            .files
+        );
+
+
+    if (!name) {
+
+        alert(
+            "⚠️ Donne un nom au cours."
+        );
+
+        return;
+
+    }
+
+
+    if (files.length === 0) {
+
+        alert(
+            "⚠️ Sélectionne au moins une photo."
+        );
+
+        return;
+
+    }
+
+
+    const button =
+        document.querySelector(
+            ".upload-button"
+        );
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "⏳ Préparation des photos...";
+
+
+    let successCount = 0;
+
+
+    try {
+
+        for (const originalFile of files) {
+
+            let file =
+                originalFile;
+
+
+            const originalName =
+                originalFile.name
+                .toLowerCase();
+
+
+            const isHEIC =
+                originalName.endsWith(".heic") ||
+                originalName.endsWith(".heif") ||
+                originalFile.type === "image/heic" ||
+                originalFile.type === "image/heif";
+
+
+            /* =================================
+               CONVERSION HEIC → JPEG
+            ================================= */
+
+            if (isHEIC) {
+
+                button.textContent =
+                    "🔄 Conversion HEIC → JPG...";
+
+
+                try {
+
+                    const converted =
+                        await heic2any({
+
+                            blob: originalFile,
+
+                            toType:
+                                "image/jpeg",
+
+                            quality:
+                                0.85
+
+                        });
+
+
+                    const jpegBlob =
+                        Array.isArray(converted)
+                        ? converted[0]
+                        : converted;
+
+
+                    file =
+                        new File(
+
+                            [jpegBlob],
+
+                            originalFile.name
+                                .replace(
+                                    /\.(heic|heif)$/i,
+                                    ".jpg"
+                                ),
+
+                            {
+                                type:
+                                    "image/jpeg"
+                            }
+
+                        );
+
+
+                } catch (conversionError) {
+
+                    console.error(
+                        "Erreur conversion HEIC :",
+                        conversionError
+                    );
+
+
+                    alert(
+                        "❌ Impossible de convertir " +
+                        originalFile.name +
+                        "."
+                    );
+
+
+                    continue;
+
+                }
+
+            }
+
+
+            /* =================================
+               VÉRIFICATION IMAGE
+            ================================= */
+
+            if (
+                !file.type.startsWith("image/")
+            ) {
+
+                alert(
+                    file.name +
+                    " n'est pas une image."
+                );
+
+                continue;
+
+            }
+
+
+            /* =================================
+               NOM UNIQUE
+            ================================= */
+
+            const uniqueName =
+                Date.now() +
+                "-" +
+                Math.random()
+                    .toString(36)
+                    .substring(2) +
+                ".jpg";
+
+
+            const filePath =
+                currentSubject +
+                "/" +
+                uniqueName;
+
+
+            /* =================================
+               ENVOI STORAGE
+            ================================= */
+
+            button.textContent =
+                "☁️ Envoi de la photo...";
+
+
+            const {
+                error: uploadError
+            } =
+                await supabaseClient
+                .storage
+                .from("courses")
+                .upload(
+
+                    filePath,
+
+                    file,
+
+                    {
+                        cacheControl:
+                            "3600",
+
+                        contentType:
+                            "image/jpeg",
+
+                        upsert:
+                            false
+                    }
+
+                );
+
+
+            if (uploadError) {
+
+                console.error(
+                    "Erreur upload :",
+                    uploadError
+                );
+
+
+                alert(
+                    "❌ Impossible d'envoyer " +
+                    originalFile.name
+                );
+
+
+                continue;
+
+            }
+
+
+            /* =================================
+               URL PUBLIQUE
+            ================================= */
+
+            const {
+                data: publicData
+            } =
+                supabaseClient
+                .storage
+                .from("courses")
+                .getPublicUrl(
+                    filePath
+                );
+
+
+            const imageUrl =
+                publicData.publicUrl;
+
+
+            /* =================================
+               ENREGISTREMENT BDD
+            ================================= */
+
+            const {
+                error: databaseError
+            } =
+                await supabaseClient
+                .from("courses")
+                .insert({
+
+                    subject:
+                        currentSubject,
+
+                    title:
+                        name,
+
+                    course_date:
+                        date || null,
+
+                    image_url:
+                        imageUrl
+
+                });
+
+
+            if (databaseError) {
+
+                console.error(
+                    "Erreur base de données :",
+                    databaseError
+                );
+
+
+                alert(
+                    "❌ La photo a été envoyée, " +
+                    "mais le cours n'a pas pu être enregistré."
+                );
+
+
+                continue;
+
+            }
+
+
+            successCount++;
+
+        }
+
+
+        /* =================================
+           NETTOYAGE
+        ================================= */
+
+        document
+            .getElementById("courseName")
+            .value = "";
+
+
+        document
+            .getElementById("courseDate")
+            .value = "";
+
+
+        document
+            .getElementById("fileInput")
+            .value = "";
+
+
+        await displayCourses();
+
+
+        if (successCount > 0) {
+
+            alert(
+                "✅ " +
+                successCount +
+                " photo(s) ajoutée(s) avec succès !"
+            );
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Erreur générale :",
+            error
+        );
+
+
+        alert(
+            "❌ Une erreur est survenue pendant l'envoi."
+        );
+
+    }
+
+
+    button.disabled = false;
+
+    button.textContent =
+        "📤 Ajouter le cours";
+
+}
+
+
+/* ==================================================
+   SUPPRIMER UN COURS
+================================================== */
+
+async function deleteCourse(
+    id,
+    imageUrl
+) {
+
+    if (!isAdmin) {
+
+        alert(
+            "❌ Accès refusé."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        !confirm(
+            "Veux-tu vraiment supprimer ce cours ?"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    try {
+
+        /* =================================
+           SUPPRIMER DE LA BASE
+        ================================= */
+
+        const {
+            error: databaseError
+        } =
+            await supabaseClient
+            .from("courses")
+            .delete()
+            .eq("id", id);
+
+
+        if (databaseError) {
+
+            console.error(
+                databaseError
+            );
+
+
+            alert(
+                "❌ Impossible de supprimer le cours."
+            );
+
+
+            return;
+
+        }
+
+
+        /* =================================
+           SUPPRIMER LE FICHIER
+        ================================= */
+
+        const marker =
+            "/storage/v1/object/public/courses/";
+
+
+        const position =
+            imageUrl.indexOf(marker);
+
+
+        if (position !== -1) {
+
+            const filePath =
+                decodeURIComponent(
+                    imageUrl.substring(
+                        position +
+                        marker.length
+                    )
+                );
+
+
+            const {
+                error: storageError
+            } =
+                await supabaseClient
+                .storage
+                .from("courses")
+                .remove([
+                    filePath
+                ]);
+
+
+            if (storageError) {
+
+                console.error(
+                    "Erreur suppression fichier :",
+                    storageError
+                );
+
+            }
+
+        }
+
+
+        await displayCourses();
+
+
+        alert(
+            "✅ Cours supprimé."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            "❌ Une erreur est survenue."
+        );
+
+    }
+
+}
+
+
+/* ==================================================
+   AFFICHER UNE IMAGE EN GRAND
+================================================== */
+
+function openImage(src) {
+
+    const modal =
+        document.createElement(
+            "div"
+        );
+
+
+    modal.style.position =
+        "fixed";
+
+    modal.style.inset =
+        "0";
+
+    modal.style.background =
+        "rgba(0,0,0,0.9)";
+
+    modal.style.display =
+        "flex";
+
+    modal.style.alignItems =
+        "center";
+
+    modal.style.justifyContent =
+        "center";
+
+    modal.style.padding =
+        "20px";
+
+    modal.style.zIndex =
+        "2000";
+
+    modal.style.cursor =
+        "pointer";
+
+
+    const image =
+        document.createElement(
+            "img"
+        );
+
+
+    image.src =
+        src;
+
+
+    image.style.maxWidth =
+        "95%";
+
+    image.style.maxHeight =
+        "95%";
+
+    image.style.objectFit =
+        "contain";
+
+    image.style.borderRadius =
+        "10px";
+
+
+    modal.appendChild(
+        image
+    );
+
+
+    modal.onclick =
+        function () {
+
+            modal.remove();
+
+        };
+
+
+    document.body.appendChild(
+        modal
+    );
+
+}
+
+
+/* ==================================================
+   DATE
+================================================== */
+
+function formatDate(date) {
+
+    const parts =
+        date.split("-");
+
+
+    if (parts.length !== 3) {
+
+        return date;
+
+    }
+
+
+    return (
+        parts[2] +
+        "/" +
+        parts[1] +
+        "/" +
+        parts[0]
+    );
+
+}
+
+
+/* ==================================================
+   VÉRIFIER ADMIN DÉJÀ CONNECTÉ
+================================================== */
+
+async function checkExistingAdmin() {
+
+    const {
+        data
+    } =
+        await supabaseClient.auth
+        .getSession();
+
+
+    if (data.session) {
+
+        isAdmin = true;
+
+
+        document
+            .getElementById("adminButton")
+            .style.display = "none";
+
+
+        document
+            .getElementById("logoutButton")
+            .style.display = "inline-block";
+
+
+        document
+            .getElementById("adminPanel")
+            .style.display = "block";
+
+    }
+
+}
+
+
+checkExistingAdmin();
+
+</script>
+
+</body>
+</html>
